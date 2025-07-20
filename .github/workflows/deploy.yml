@@ -1,0 +1,73 @@
+name: Deploy pic-to-caption to server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      ENV_FILE: ${{ vars.ENV_FILE }}
+      SSH_PRIVATE_KEY: ${{ vars.SSH_PRIVATE_KEY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan solrengine.com >> ~/.ssh/known_hosts
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ env.SSH_PRIVATE_KEY }}
+
+      # - name: Stop running containers
+      #   run: |
+      #     ssh mahedi@solrengine.com "
+      #       set -e
+      #       cd /var/www/pic-to-caption/current/
+      #       docker-compose down
+      #       echo 'Stopped running containers.'
+      #     "
+
+      - name: Deploy with rsync
+        run: |
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.gitignore' \
+            ./ mahedi@solrengine.com:/var/www/pic-to-caption/current/
+
+      - name: Create ENV file
+        run: |
+          ssh mahedi@solrengine.com "
+            set -e
+            cd /var/www/pic-to-caption/current/
+            rm -rf .env
+            echo '${{ env.ENV_FILE }}' > .env
+            echo 'env file created - Done.'
+          "
+
+      # - name: Overwrite docker-compose.override.yml
+      #   run: |
+      #     ssh mahedi@solrengine.com "
+      #       set -e
+      #       cd /var/www/pic-to-caption/current/
+      #       rm -rf docker-compose.override.yml
+      #       ln -s docker-compose.override.production.yml docker-compose.override.yml
+      #       echo 'Overwrite docker-compose.override.yml with production version - Done.'
+          "
+
+      - name: Start containers
+        run: |
+          ssh mahedi@solrengine.com "
+            set -e
+            cd /var/www/pic-to-caption/current/
+            docker-compose up -d --build
+            echo 'Started containers.'
+          "
