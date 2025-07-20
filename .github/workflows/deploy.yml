@@ -1,4 +1,4 @@
-name: Deploy pic-to-caption to server
+name: Deploy to server
 
 on:
   push:
@@ -8,9 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production
-    env:
-      ENV_FILE: ${{ vars.ENV_FILE }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
