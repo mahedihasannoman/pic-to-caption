@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment
+.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# OS
+.DS_Store
+
+# Images
+*.jpeg
+*.jpg
+*.png
+
+# Misc
+*.swp
+*.swo
+
+# Static files
+#app/static/

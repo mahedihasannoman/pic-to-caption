@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  alt-generator:
+    build: .
+    container_name: alt-text-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app
+    env_file:
+      - .env
+    restart: always
+    # Uncomment below for GPU support (NVIDIA runtime needed)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           capabilities: [gpu]
