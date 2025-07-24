@@ -36,14 +36,35 @@ def verify_api_key(api_key: str = Depends(api_key_header)):
 def read_root():
     return {"message": "Welcome to the Image Captioning API!"}
 
+@app.get("/system-info")
+async def system_info():
+    return {
+        "device": device,
+        "model_name": "Mahedi Hasan's BLIP Image Captioning Model",
+    }
+
 # Protect the /generate-alt route with API key authentication
 @app.post("/generate-alt")
-async def generate_alt(file: UploadFile = File(...), api_key: str = Depends(verify_api_key)):
+async def generate_alt(file: UploadFile = File(...)): #, api_key: str = Depends(verify_api_key)
     contents = await file.read()
     image = Image.open(io.BytesIO(contents)).convert("RGB")
 
     inputs = processor(images=image, return_tensors="pt").to(device)
-    out = model.generate(**inputs)
+    #out = model.generate(**inputs)
+
+    out = model.generate(
+        **inputs,
+        max_length=25,  # Increased from default (~20) for longer captions
+        min_length=5,   # Ensure minimum caption length
+        num_beams=5,     # More beams for better quality
+        length_penalty=1.0,  # Encourage longer sequences
+        repetition_penalty=1.2,  # Reduce repetition
+        do_sample=True,  # Enable sampling for more diverse captions
+        temperature=0.7,  # Control randomness
+        top_p=0.9,       # Nucleus sampling
+        early_stopping=True
+    )
+
     caption = processor.decode(out[0], skip_special_tokens=True)
 
     return {"alt_text": caption}
